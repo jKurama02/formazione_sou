@@ -1,4 +1,4 @@
-coming soon explaanation
+coming soon explenation
 
 
 ^_______^

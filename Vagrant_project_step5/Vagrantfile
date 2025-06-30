@@ -8,6 +8,9 @@ Vagrant.configure("2") do |config|
     sudo apt install apache2 -y
     sudo systemctl enable apache2@
     echo '<html><head><title>Example</title></head><body><h1>~anmedyns</h1><p>Hello DevOpsTribe!</p></body></html>' | sudo tee /var/www/html/index.html
+    sudo cp /etc/login.defs /etc/login.defs.bak
+    sudo sed -i 's/^\(PASS_MAX_DAYS\s*\).*$/\190/' /etc/login.defs   #strong to understand 
+    sudo sed -i 's/^\(PASS_WARN_AGE\s*\).*$/\15/' /etc/login.defs 
   SHELL
  end
  config.vm.define "rocky9" do |rocky|
@@ -25,6 +28,9 @@ Vagrant.configure("2") do |config|
     sudo echo "UUID=$TARGET_DISK / ext4 defaults 0 2" | sudo tee -a /etc/fstab
     sudo mount -a
     sudo parted $TARGET_DISK print
+    sudo cp /etc/login.defs /etc/login.defs.bak
+    sudo sed -i 's/^\(PASS_MAX_DAYS\s*\).*$/\190/' /etc/login.defs   #strong to understand 
+    sudo sed -i 's/^\(PASS_WARN_AGE\s*\).*$/\15/' /etc/login.defs 
   SHELL
  end
 end

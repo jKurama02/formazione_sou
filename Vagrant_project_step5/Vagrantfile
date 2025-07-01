@@ -4,14 +4,16 @@ Vagrant.configure("2") do |config|
   debian.vm.box_version = "4.3.12"
   debian.vm.network "private_network", ip: "192.168.56.20"
   debian.vm.provision "shell", inline: <<-SHELL
+    sleep 10
     sudo apt-get update --fix-missing
     sudo apt install apache2 -y
     sudo systemctl enable apache2@
     echo '<html><head><title>Example</title></head><body><h1>~anmedyns</h1><p>Hello DevOpsTribe!</p></body></html>' | sudo tee /var/www/html/index.html
     sudo cp /etc/login.defs /etc/login.defs.bak
+    # change password default setting
     sudo sed -i 's/^\(PASS_MAX_DAYS\s*\).*$/\190/' /etc/login.defs   #strong to understand 
-    sudo sed -i 's/^\(PASS_WARN_AGE\s*\).*$/\15/' /etc/login.defs 
-  SHELL
+    sudo sed -i 's/^\(PASS_WARN_AGE\s*\).*$/\15/' /etc/login.defs    #does not update the file correctly, but if you run this cmd in running VM its ok
+    SHELL
  end
  config.vm.define "rocky9" do |rocky|
   rocky.vm.box = "eurolinux-vagrant/rocky-9"
@@ -28,10 +30,44 @@ Vagrant.configure("2") do |config|
     sudo echo "UUID=$TARGET_DISK / ext4 defaults 0 2" | sudo tee -a /etc/fstab
     sudo mount -a
     sudo parted $TARGET_DISK print
-    sudo cp /etc/login.defs /etc/login.defs.bak
+    sudo cp /etc/login.defs /etc/login.defs.xbak
     sudo sed -i 's/^\(PASS_MAX_DAYS\s*\).*$/\190/' /etc/login.defs   #strong to understand 
-    sudo sed -i 's/^\(PASS_WARN_AGE\s*\).*$/\15/' /etc/login.defs 
+    sudo sed -i 's/^\(PASS_WARN_AGE\s*\).*$/\15/' /etc/login.defs
+    #creation users account
+    sudo useradd -ms /bin/bash circle
+    (echo "debianvagrant"; echo "debianvagrant") | sudo passwd circle #in this way its working for this distro 
+    sudo useradd -ms /bin/bash square
+    (echo "debianvagrant"; echo "debianvagrant") | sudo passwd square
+    sudo useradd -ms /bin/bash triangle
+    (echo "debianvagrant"; echo "debianvagrant") | sudo passwd triangle
+    sudo useradd -ms /bin/bash rectangle
+    (echo "debianvagrant"; echo "debianvagrant") | sudo passwd rectangle
+    sudo useradd -ms /bin/bash dot
+    (echo "debianvagrant"; echo "debianvagrant") | sudo passwd dot
   SHELL
+=begin    
+  #I tried to automate via scripts the process of creating and sharing the ssh key for each user ,but the “su” command is designed to read the password only from the terminal for security reasons.
+  
+  == for every user in this vm, create ssh-key running this ---\
+                                                                |
+      ssh-keygen -C "$(whoami)@$(hostname)" + enter + enter  <--/
+  
+  == you can find your ssh-key in       /home/"currently_user"/.ssh
+
+  == same for every users,run this cmd to shere public key with server (debian vm)---\
+                                                                                      |
+        ssh-copy-id vagrant"@192.168.56.20 + yes + "vagrant" <-- passwd debina    <--/
+
+  == and now you can run "ssh vagrant@192.168.56.20" to enter via ssh on debian vagrant user from every rocky9 user
+
+=end
+  ## Step_07
+  rocky.vm.provision "shell", inline: <<-SHELL
+    touch foo.log
+    sudo chmod 700 foo.log
+    sudo groupadd foobar
+    sudo chgrp foobar foo.log
+  SHELL
+
  end
 end
-

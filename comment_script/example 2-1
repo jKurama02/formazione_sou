@@ -1,0 +1,10 @@
+
+# Cleanup
+# Run as root, of course.
+ 
+cd /var/log #chanege directory
+cat /dev/null > messages # cat content and overwrite if exist the file , if it doese not exist it creates it  
+cat /dev/null > wtmp # cat content and overwrite if exist the file , if it doese not exist it creates it  
+echo "Log files cleaned up." # print on stdout (terminal) the string
+
+

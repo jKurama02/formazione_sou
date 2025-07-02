@@ -1,0 +1,44 @@
+#! /bin/bash
+# progress-bar2.sh
+# Author: Graham Ewart (with reformatting by ABS Guide author).
+# Used in ABS Guide with permission (thanks!).
+ 
+# Invoke this script with bash. It doesn't work with sh.
+ 
+interval=1
+long_interval=10
+ 
+{
+     trap "exit" SIGUSR1
+     sleep $interval; sleep $interval
+     while true
+     do
+       echo -n '.'     # Use dots.
+       sleep $interval
+     done; } &         # Start a progress bar as a background process.
+ 
+pid=$!
+trap "echo !; kill -USR1 $pid; wait $pid"  EXIT        # To handle ^C.
+ 
+echo -n 'Long-running process '
+sleep $long_interval
+echo ' Finished!'
+ 
+kill -USR1 $pid
+wait $pid              # Stop the progress bar.
+trap EXIT
+ 
+exit $?
+
+
+#   Inizializza due contatori,
+#   parte il primo blocco di codice delimitato dalle parentesi {}, ma in background &
+#       dopo aver iniziato ad eseguire la prima riga del blocco di codice all'interno dell {},
+#       viene usato per due volte il comando sleep, in modo tale da poter permettere l'esecuzione
+#       della prima parte del codice che viene subito dopo il blocco {}.
+#   Cio' permette di stampare sul terminale la stringa "Long-running process" seguita da dei '.' che si concatenano 
+#       per creare una sorta di caricamento che dura in totale 10 secondi che equivale al tempo che impiega la funzione sleep subito dopo la stringa "Long-running process"
+#   Dopo aver stampato "Long-running process ........ Finished!" viene 'ucciso' il processo avviato inizialmente in background tramite la funzione kill e tramite "wait" si sincronizzano 
+#       i processi che stanno terminando ondevitare processi "orfani"
+
+#   Non e' stato facile comprendere a prima vista cosa facesse concretamente questo script

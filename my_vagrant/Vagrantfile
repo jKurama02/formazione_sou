@@ -10,9 +10,10 @@ Vagrant.configure("2") do |config|
     sudo systemctl enable apache2@
     echo '<html><head><title>Example</title></head><body><h1>~anmedyns</h1><p>Hello DevOpsTribe!</p></body></html>' | sudo tee /var/www/html/index.html
     sudo cp /etc/login.defs /etc/login.defs.bak
-    # change password default setting
-    sudo sed -i 's/^\(PASS_MAX_DAYS\s*\).*$/\190/' /etc/login.defs   #strong to understand 
-    sudo sed -i 's/^\(PASS_WARN_AGE\s*\).*$/\15/' /etc/login.defs    #does not update the file correctly, but if you run this cmd in running VM its ok
+    
+    # change password setting
+    sudo sed -i 's/^\(PASS_MAX_DAYS\s*\).*$/\190/' /etc/login.defs    
+    sudo sed -i 's/^\(PASS_WARN_AGE\s*\).*$/\15/' /etc/login.defs    #this two cmd does not update the file correctly, but if you run inside VM its ok
     SHELL
  end
  config.vm.define "rocky9" do |rocky|
@@ -24,15 +25,18 @@ Vagrant.configure("2") do |config|
     echo 'echo "=== Welcome in VM ==="' >> /home/vagrant/.bashrc
     echo 'echo "=== Try this cmd --> curl http://192.168.56.20 ===" ' >> /home/vagrant/.bashrc
     sudo parted /dev/sdb --script mklabel gpt
-    sudo parted /dev/sdb --script -- mkpart primary ext4 0 1000M
+    sudo parted /dev/sdb --script -- mkpart primary ext4 0 1000M        #random partition for fun 
     sudo mkfs.ext4 /dev/sdb1
     export TARGET_DISK=$(sudo blkid /dev/sdb1 -s UUID -o value)
     sudo echo "UUID=$TARGET_DISK / ext4 defaults 0 2" | sudo tee -a /etc/fstab
     sudo mount -a
     sudo parted $TARGET_DISK print
     sudo cp /etc/login.defs /etc/login.defs.xbak
-    sudo sed -i 's/^\(PASS_MAX_DAYS\s*\).*$/\190/' /etc/login.defs   #strong to understand 
+
+    # change password setting
+    sudo sed -i 's/^\(PASS_MAX_DAYS\s*\).*$/\190/' /etc/login.defs  #this two cmd does not update the file correctly, but if you run inside VM its ok
     sudo sed -i 's/^\(PASS_WARN_AGE\s*\).*$/\15/' /etc/login.defs
+
     #creation users account
     sudo useradd -ms /bin/bash circle
     (echo "debianvagrant"; echo "debianvagrant") | sudo passwd circle #in this way its working for this distro 
@@ -64,10 +68,14 @@ Vagrant.configure("2") do |config|
   ## Step_07
   rocky.vm.provision "shell", inline: <<-SHELL
     touch foo.log
-    sudo chmod 700 foo.log
+    sudo chmod 700 foo.log          #random prior work  
     sudo groupadd foobar
     sudo chgrp foobar foo.log
   SHELL
 
  end
 end
+
+
+
+# i think the partitio is not mounted in the right way

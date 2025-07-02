@@ -23,7 +23,7 @@ echo "${!address[*]}"   # The array indices ...
 
 
 
-#   questo script usato bash4 , che attualmente non posso provare su questa macchina 
-#   questo script fa vedere come in bash4 sia state introdotte le array con associazione tramite stringhe come identificatore.
+#   questo script usa bash4 , che attualmente non posso provare su questa macchina 
+#   i seguenti comandi permettono di vedere come in bash4 sia state introdotte le array con associazione tramite stringhe come identificatore.
 #   il comando finale stampa tutti gli indici dell' array 
 #   

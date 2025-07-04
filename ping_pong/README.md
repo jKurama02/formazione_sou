@@ -1,0 +1,1 @@
+Hi.....run this "init.sh" and check out

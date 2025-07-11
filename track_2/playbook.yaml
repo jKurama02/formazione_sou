@@ -1,0 +1,73 @@
+---
+- name: $ Start the circus $
+  hosts: all  
+  become: yes
+  # vars_files:
+  #   - vars/main.yml
+  tasks:
+    - name: Add official docker repo
+      command: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo  #to avoid recursive dowloads
+    - name: Install Docker
+      dnf:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+    - name: Create Jenkins home directory
+      file:
+        path: ./jenkins_home
+        state: directory
+        mode: '0777'
+    - name: Install python3-pip 
+      dnf: #package manager of system 
+        name: python3-pip
+        state: present
+    - name: Install required Python packages
+      ansible.builtin.pip: #package manager of python
+        name: requests
+        state: present
+      become: yes
+    - name: Starting docker
+      service:
+        name: docker
+        state: started 
+        enabled: true #sudo su
+    - name: Create docker-network
+      docker_network:
+        name: circus_network
+        driver: bridge #default
+        ipam_config:
+        - subnet: 192.168.50.0/24
+    - name: Launch Jenkins-master
+      community.docker.docker_container: #module who manage docker 
+        name: jenkins-master
+        image: jenkins/jenkins:lts
+        state: started
+        volumes:
+          - ./jenkins_home:/var/jenkins_home
+        ports:
+          - "8080:8080" #recommended from repo
+          - "50000:50000" #recommended from repo
+        networks:
+          - name: circus_network  
+            ipv4_address: 192.168.50.7
+        env:
+          JAVA_OPTS: "-Djenkins.install.runSetupWizard=false -Djenkins.model.Jenkins.slaveAgentPort=50000" # disable first login configuration
+          JENKINS_SLAVE_AGENT_PORT: "50000"
+    - name: Launch jenkins-agent and connect to master
+      community.docker.docker_container:
+        name: jenkins-agent
+        image: jenkins/inbound-agent:latest
+        state: started
+        env:
+          JENKINS_URL: "http://192.168.50.7:8080" # URL del master Jenkins
+          JENKINS_AGENT_NAME: "Jenkins-agent" # Nome del nodo agent
+          JENKINS_SECRET: "0B82455D63A54029911503747DA33B12" # Secret generato dal master Jenkins
+        networks:
+          - name: circus_network  
+            ipv4_address: 192.168.50.8
+
+

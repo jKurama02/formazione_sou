@@ -62,12 +62,16 @@
         name: jenkins-agent
         image: jenkins/inbound-agent:latest
         state: started
+        # user: root
+        # command: >
+        #   sh -c "mkdir -p /var/jenkins && chmod 755 /var/jenkins"
         env:
-          JENKINS_URL: "http://192.168.50.7:8080" # URL del master Jenkins
-          JENKINS_AGENT_NAME: "Jenkins-agent" # Nome del nodo agent
-          JENKINS_SECRET: "0B82455D63A54029911503747DA33B12" # Secret generato dal master Jenkins
+          JENKINS_URL: "http://192.168.50.7:8080"
+          JENKINS_AGENT_NAME: "jenkins-agent"
+          JENKINS_AGENT_WORKDIR: "/home/jenkins/agent"
+          JENKINS_SECRET: "0B82455D63A54029911503747DA33B12"
+        volumes:
+          - jenkins_slave_home:/home/jenkins/agent
         networks:
           - name: circus_network  
             ipv4_address: 192.168.50.8
-
-

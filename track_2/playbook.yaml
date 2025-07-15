@@ -2,8 +2,8 @@
 - name: $ Start the circus $
   hosts: all  
   become: yes
-  # vars_files:
-  #   - vars/main.yml
+  vars:
+    jenkins_secret: "0B82455D63A54029911503747DA33B12"
   tasks:
     - name: Add official docker repo
       command: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
@@ -44,7 +44,7 @@
     - name: Launch Jenkins-master
       community.docker.docker_container: #module who manage docker 
         name: jenkins-master
-        image: jenkins/jenkins:lts
+        image: jenkins/jenkins:lts-jdk11
         state: started
         volumes:
           - ./jenkins_home:/var/jenkins_home
@@ -57,19 +57,17 @@
         env:
           JAVA_OPTS: "-Djenkins.install.runSetupWizard=false -Djenkins.model.Jenkins.slaveAgentPort=50000" # disable first login configuration
           JENKINS_SLAVE_AGENT_PORT: "50000"
+          CASC_JENKINS_CONFIG: "/var/jenkins_home/jenkins.yaml"
     - name: Launch jenkins-agent and connect to master
       community.docker.docker_container:
         name: jenkins-agent
         image: jenkins/inbound-agent:latest
         state: started
-        # user: root
-        # command: >
-        #   sh -c "mkdir -p /var/jenkins && chmod 755 /var/jenkins"
         env:
           JENKINS_URL: "http://192.168.50.7:8080"
           JENKINS_AGENT_NAME: "jenkins-agent"
           JENKINS_AGENT_WORKDIR: "/home/jenkins/agent"
-          JENKINS_SECRET: "0B82455D63A54029911503747DA33B12"
+          JENKINS_SECRET: "{{ jenkins_secret }}"
         volumes:
           - jenkins_slave_home:/home/jenkins/agent
         networks:

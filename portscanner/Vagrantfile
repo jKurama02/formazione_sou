@@ -1,0 +1,20 @@
+Vagrant.configure("2") do |config|
+  config.vm.define "debian1" do |debian1|
+   debian1.vm.box = "generic/debian11"
+   debian1.vm.box_version = "4.3.12"
+   debian1.vm.network "private_network", ip: "192.168.56.10"
+   debian1.vm.provision "file", source: "scan.sh", destination: "/home/vagrant/"
+   debian1.vm.provision "shell", inline: <<-SHELL
+    sudo apt install netcat -y
+    SHELL
+  end
+  config.vm.define "debian2" do |debian2|
+   debian2.vm.box = "generic/debian11"
+   debian2.vm.box_version = "4.3.12"
+   debian2.vm.network "private_network", ip: "192.168.56.20"
+   debian2.vm.provision "file", source: "scan.sh", destination: "/home/vagrant/"
+   debian2.vm.provision "shell", inline: <<-SHELL
+    sudo apt install netcat -y
+    SHELL
+  end
+end

@@ -26,7 +26,5 @@ The script will ask for:
 - Netcat pre-installed
 - Port scanner script in /home/vagrant/
 
-## Clean Up
-Run `vagrant destroy` when finished to remove the VMs.
+  hi from SOU ^______^
 
-Note: For educational purposes only.

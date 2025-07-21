@@ -3,7 +3,7 @@
   hosts: all  
   become: yes
   vars:
-    jenkins_secret: "0B82455D63A54029911503747DA33B12"
+    jenkins_secret: "0B82455D63A54029911503747DA33B12"  #this is random pass-code only to able jenkins-agent correctly work line. 69
   tasks:
     - name: Add official docker repo
       command: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
@@ -16,11 +16,11 @@
           - docker-ce-cli
           - containerd.io
         state: present
-    - name: Create Jenkins home directory
-      file:
-        path: ./jenkins_home
-        state: directory
-        mode: '0777'
+    # - name: Create Jenkins home directory
+    #   file:      
+    #     path: /home/vagrant/jenkins_home2
+    #     state: directory
+    #     mode: '0766' 
     - name: Install python3-pip 
       dnf: #package manager of system 
         name: python3-pip
@@ -44,10 +44,12 @@
     - name: Launch Jenkins-master
       community.docker.docker_container: #module who manage docker 
         name: jenkins-master
-        image: jenkins/jenkins:lts-jdk11
+        image: jenkins/jenkins:lts
         state: started
-        volumes:
-          - ./jenkins_home:/var/jenkins_home
+        # volumes:
+        #   - /home/vagrant/jenkins_home2:/var/jenkins_home           -Djenkins.install.runSetupWizard=false
+        # volumes:
+        #   - "jenkins-data:/var/jenkins_home"
         ports:
           - "8080:8080" #recommended from repo
           - "50000:50000" #recommended from repo
@@ -55,10 +57,9 @@
           - name: circus_network  
             ipv4_address: 192.168.50.7
         env:
-          JAVA_OPTS: "-Djenkins.install.runSetupWizard=false -Djenkins.model.Jenkins.slaveAgentPort=50000" # disable first login configuration
+          JAVA_OPTS: "-Djenkins.model.Jenkins.slaveAgentPort=50000" 
           JENKINS_SLAVE_AGENT_PORT: "50000"
-          CASC_JENKINS_CONFIG: "/var/jenkins_home/jenkins.yaml"
-    - name: Launch jenkins-agent and connect to master
+    - name: Launch jenkins-agent
       community.docker.docker_container:
         name: jenkins-agent
         image: jenkins/inbound-agent:latest
@@ -66,7 +67,7 @@
         env:
           JENKINS_URL: "http://192.168.50.7:8080"
           JENKINS_AGENT_NAME: "jenkins-agent"
-          JENKINS_AGENT_WORKDIR: "/home/jenkins/agent"
+          JENKINS_AGENT_WORKDIR: "/home/jenkins"
           JENKINS_SECRET: "{{ jenkins_secret }}"
         volumes:
           - jenkins_slave_home:/home/jenkins/agent

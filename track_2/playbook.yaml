@@ -35,19 +35,33 @@
         name: docker
         state: started 
         enabled: true #sudo su
+    - name: Chmod docker.sock
+      command: sudo chmod 666 /var/run/docker.sock
     - name: Create docker-network
       docker_network:
         name: circus_network
         driver: bridge #default
         ipam_config:
         - subnet: 192.168.50.0/24
+    # - name: Ensure jenkins user exists
+    #   ansible.builtin.user:
+    #     name: jenkins
+    #     shell: /bin/bash
+    #     state: present
+    # - name: Set owner of Jenkins home directory to jenkins
+    #   file:
+    #     path: /jenkins_home2
+    #     owner: jenkins
+    #     group: jenkins
+    #     state: directory
+    #     mode: '0766'
     - name: Launch Jenkins-master
       community.docker.docker_container: #module who manage docker 
         name: jenkins-master
-        image: jenkins/jenkins:lts
+        image: jenkins/jenkins:2.480-jdk21
         state: started
-        # volumes:
-        #   - /home/vagrant/jenkins_home2:/var/jenkins_home           -Djenkins.install.runSetupWizard=false
+        volumes:
+          - /jenkins_home2:/var/jenkins_home
         # volumes:
         #   - "jenkins-data:/var/jenkins_home"
         ports:
@@ -63,14 +77,16 @@
       community.docker.docker_container:
         name: jenkins-agent
         image: jenkins/inbound-agent:latest
-        state: started
+        state: started 
         env:
           JENKINS_URL: "http://192.168.50.7:8080"
           JENKINS_AGENT_NAME: "jenkins-agent"
           JENKINS_AGENT_WORKDIR: "/home/jenkins"
-          JENKINS_SECRET: "{{ jenkins_secret }}"
+          JENKINS_SECRET: "{{ jenkins_secret }}" 
         volumes:
           - jenkins_slave_home:/home/jenkins/agent
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /usr/bin/docker:/usr/bin/docker
         networks:
           - name: circus_network  
             ipv4_address: 192.168.50.8

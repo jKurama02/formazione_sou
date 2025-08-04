@@ -16,11 +16,6 @@
           - docker-ce-cli
           - containerd.io
         state: present
-    # - name: Create Jenkins home directory
-    #   file:      
-    #     path: /home/vagrant/jenkins_home2
-    #     state: directory
-    #     mode: '0766' 
     - name: Install python3-pip 
       dnf: #package manager of system 
         name: python3-pip
@@ -37,33 +32,42 @@
         enabled: true #sudo su
     - name: Chmod docker.sock
       command: sudo chmod 666 /var/run/docker.sock
+    - name: Install k3s dependencies
+      dnf:
+        name:
+          - curl
+          - iptables
+          - iproute
+          - sudo
+        state: present
+    - name: Install k3s
+      shell: curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s
+      become: yes
+
+    - name: Chmod k3s.yaml
+      command: sudo chmod 666 /etc/rancher/k3s/k3s.yaml
+      args:
+        creates: /etc/rancher/k3s/k3s.yaml
+
+    - name: Install helm
+      become: yes
+      shell: |
+        curl -LO https://get.helm.sh/helm-v3.14.4-linux-amd64.tar.gz
+        tar -zxvf helm-v3.14.4-linux-amd64.tar.gz
+        mv linux-amd64/helm /usr/local/bin/helm
     - name: Create docker-network
       docker_network:
         name: circus_network
         driver: bridge #default
         ipam_config:
         - subnet: 192.168.50.0/24
-    # - name: Ensure jenkins user exists
-    #   ansible.builtin.user:
-    #     name: jenkins
-    #     shell: /bin/bash
-    #     state: present
-    # - name: Set owner of Jenkins home directory to jenkins
-    #   file:
-    #     path: /jenkins_home2
-    #     owner: jenkins
-    #     group: jenkins
-    #     state: directory
-    #     mode: '0766'
     - name: Launch Jenkins-master
       community.docker.docker_container: #module who manage docker 
         name: jenkins-master
-        image: jenkins/jenkins:2.480-jdk21
+        image: jenkins/jenkins:latest
         state: started
-        volumes:
-          - /jenkins_home2:/var/jenkins_home
-        # volumes:
-        #   - "jenkins-data:/var/jenkins_home"
         ports:
           - "8080:8080" #recommended from repo
           - "50000:50000" #recommended from repo
@@ -73,6 +77,15 @@
         env:
           JAVA_OPTS: "-Djenkins.model.Jenkins.slaveAgentPort=50000" 
           JENKINS_SLAVE_AGENT_PORT: "50000"
+    - name: Chmod k3s.yaml
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/k3s.yaml
+        mode: '0777'
+    - name: Update k3s.yaml with correct server IP and remove insecure flag
+      become: yes
+      shell: |
+        sed -i 's|server: https://127.0.0.1:6443|server: https://10.0.2.15:6443|' /etc/rancher/k3s/k3s.yaml
+        sed -i '/insecure-skip-tls-verify: true/d' /etc/rancher/k3s/k3s.yaml
     - name: Launch jenkins-agent
       community.docker.docker_container:
         name: jenkins-agent
@@ -82,11 +95,18 @@
           JENKINS_URL: "http://192.168.50.7:8080"
           JENKINS_AGENT_NAME: "jenkins-agent"
           JENKINS_AGENT_WORKDIR: "/home/jenkins"
-          JENKINS_SECRET: "{{ jenkins_secret }}" 
+          JENKINS_SECRET: "{{ jenkins_secret }}"
+          KUBECONFIG: "/home/jenkins/.kube/k3s.yaml"
         volumes:
           - jenkins_slave_home:/home/jenkins/agent
           - /var/run/docker.sock:/var/run/docker.sock
           - /usr/bin/docker:/usr/bin/docker
+          - /usr/local/bin/kubectl:/usr/local/bin/kubectl
+          - /etc/rancher/k3s/k3s.yaml:/home/jenkins/.kube/k3s.yaml
+          - /usr/local/bin/helm:/usr/local/bin/helm
         networks:
           - name: circus_network  
             ipv4_address: 192.168.50.8
+    # - name: Create namespace formazione-sou
+    #   shell: "kubectl create namespace formazione-sou"
+

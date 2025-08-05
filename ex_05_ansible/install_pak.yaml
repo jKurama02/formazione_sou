@@ -1,0 +1,28 @@
+---
+- name: "Gestione pacchetti"
+  hosts: all 
+  become: yes
+
+  vars_files: #pull vars in the same directory
+    - vars.yaml
+    - vars-user.yaml
+
+  tasks:
+    - name: "Install/Remove package"
+      ansible.builtin.package:
+        name: "{{ item.name }}" #association    "place-holder"  like kay-value`
+        state: "{{ item.state }}"
+      loop: "{{ packages }}" #repeat action for every object in list
+    - name: "Add group"
+      ansible.builtin.group:
+        name: "{{ item.group }}"  
+        state: present  
+      loop: "{{ users }}"
+    - name: "Add users "
+      ansible.builtin.user:
+        name: "{{ item.name }}" 
+        group: "{{ item.group | default(omit) }}" 
+        home: "{{ item.home | default(omit) }}" 
+        shell: "{{ item.shell | default('/bin/bash') }}"
+      loop: "{{ users }}" 
+        

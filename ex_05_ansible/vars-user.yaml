@@ -1,0 +1,9 @@
+users:
+  - name: alice  
+    group: developers
+    home: /home/alice
+    shell: /bin/bash
+  - name: bob
+    group: admins
+    home: /home/bob
+    shell: /bin/zsh

@@ -57,6 +57,18 @@
         curl -LO https://get.helm.sh/helm-v3.14.4-linux-amd64.tar.gz
         tar -zxvf helm-v3.14.4-linux-amd64.tar.gz
         mv linux-amd64/helm /usr/local/bin/helm
+    - name: Create Service-account + role + bindrole
+      become: yes
+      shell: |
+        /usr/local/bin/kubectl create namespace formazione-sou
+        /usr/local/bin/kubectl create serviceaccount cluster-reader
+        /usr/local/bin/kubectl create role c-r --namespace=formazione-sou --verb=get --verb=watch --verb=list --resource=deployments
+        /usr/local/bin/kubectl create rolebinding bind-c-r --namespace=formazione-sou --role=c-r --serviceaccount=default:cluster-reader
+    - name: Copy export.sh
+      ansible.builtin.copy:
+        src: export.sh
+        dest: /home/vagrant/
+        mode: '0777'
     - name: Create docker-network
       docker_network:
         name: circus_network
@@ -68,6 +80,7 @@
         name: jenkins-master
         image: jenkins/jenkins:latest
         state: started
+        restart_policy: always
         ports:
           - "8080:8080" #recommended from repo
           - "50000:50000" #recommended from repo
@@ -91,6 +104,7 @@
         name: jenkins-agent
         image: jenkins/inbound-agent:latest
         state: started 
+        restart_policy: always
         env:
           JENKINS_URL: "http://192.168.50.7:8080"
           JENKINS_AGENT_NAME: "jenkins-agent"

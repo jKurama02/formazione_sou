@@ -1,0 +1,52 @@
+- name: First limits single user
+  hosts: all
+  become: true
+  vars:
+    user: andrea
+    env: production
+    whitelist_users: ['apple','banana','carrot']
+    ## vars for docker template 
+    base_image: python:3.11
+    install_deps: true
+    packages:
+      - git
+      - curl
+    env_var_name: MY_ENV
+    env_var_value: test
+    command: echo "Hello Sou"
+
+  tasks:
+    - name: Create user andrea
+      ansible.builtin.user:
+        name: andrea
+    - name: Create users in whitelist
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ whitelist_users }}"
+#############################################################
+    - name: config limits from conf-lim.j2 in limits.conf
+      ansible.builtin.blockinfile:
+        path: /etc/security/limits.conf                                ## Ex_1
+        block: |   
+          {{ lookup('ansible.builtin.template', 'conf-lim.j2') }} 
+        insertafter: EOF
+        create: true
+#############################################################
+    - name: Add  -:ALL:ALL in /etc/security/access.conf
+      ansible.builtin.lineinfile:
+        path: /etc/security/access.conf
+        regexp: '^#-:ALL:ALL'
+        line: '- : ALL : ALL'
+    - name: config acces access-whitelist.j2 in acces.conf             ## Ex_2
+      ansible.builtin.blockinfile:
+        path: /etc/security/access.conf
+        block: |   
+          {{ lookup('ansible.builtin.template', 'access-whitelist.j2') }} 
+        insertbefore: '- : ALL : ALL'
+        create: true
+#############################################################
+    - name: Generate Dockerfile frome template
+      ansible.builtin.template:
+        src: dok-file.j2                                               ## Ex_3 
+        dest: ./Dockerfile

@@ -1,0 +1,14 @@
+FROM {{ base_image }}
+
+{% if install_deps %}
+RUN apt-get update && apt-get install -y
+{% for package in packages %}
+{{ package }}
+{% endfor %}
+{% endif %}
+
+ENV {{ env_var_name }}="{{ env_var_value }}"
+
+WORKDIR /app
+
+CMD ["{{ command }}"]

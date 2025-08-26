@@ -1,0 +1,37 @@
+---
+- name: Config Docker Registry
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Assicura che pip sia installato
+      dnf:
+        name: python3-pip
+        state: present
+
+    - name: Installa librerie Python richieste per Ansible Docker
+      pip:
+        name:
+          - requests
+          - docker
+          - pyyaml
+        executable: pip3
+    - name: Add official docker repo
+      command: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo  #to avoid recursive dowloads
+    - name: Install Docker
+      dnf:
+       name:
+         - docker-ce                    ## If not present, install Docker
+         - docker-ce-cli
+         - containerd.io
+       state: present
+    - name: Create registry container
+      community.docker.docker_container:
+        name: registry
+        image: registry:2
+        state: started
+        ports:
+          - "5000:5000"
+        

@@ -1,0 +1,40 @@
+services:
+  flask-app:
+    name: app.py
+    build: .
+    ports:
+      - "5000:5000"
+    # depends_on:
+    #   - otel-collector
+
+  otel-collector:
+    name: otel-collector
+    image: otel/opentelemetry-collector-contrib:0.102.0
+    command: ["--config=/etc/config.yaml"]
+    ports:
+      - "4317:4317"
+      - "9464:9464"
+    volumes:
+      - ./otel-collector-config.yaml:/etc/config.yaml:ro
+
+  prometheus:
+    name: prometheus
+    image: prom/prometheus:v2.54.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    # depends_on:
+    #   - otel-collector
+
+  grafana:
+    name: grafana
+    image: grafana/grafana:10.4.0
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/grafana-datasources.yml:ro  #real only 
+    # depends_on:
+    #   - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin

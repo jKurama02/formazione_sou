@@ -1,0 +1,32 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+  memory_limiter:
+    limit_mib: 5000
+    check_interval: 1s
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:9464"
+  
+  logging:
+    loglevel: debug
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging]
+    
+    metrics:
+      receivers: [otlp] # take from Flask app
+      processors: [memory_limiter, batch] #regroups data efficiently
+      exporters: [prometheus, logging] # send to prometheus

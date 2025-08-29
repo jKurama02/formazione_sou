@@ -21,11 +21,7 @@ exporters:
 
 service:
   pipelines:
-    traces:
-      receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [logging]
-    
+  
     metrics:
       receivers: [otlp] # take from Flask app
       processors: [memory_limiter, batch] #regroups data efficiently

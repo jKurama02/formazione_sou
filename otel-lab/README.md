@@ -12,31 +12,8 @@ A minimal, production-inspired example for monitoring a Flask application using 
 4. **Prometheus** scrapes metrics from the Collector.
 5. **Grafana** visualizes the data collected by Prometheus in interactive dashboards.
 
-┌─────────────────┐    OTLP/gRPC    ┌──────────────────────┐
-│                 │    (4317)       │                      │
-│   Flask App     ├─────────────────►  OTEL Collector      │
-│ (localhost:5000)│                 │ (localhost:4317/4318)│
-│                 │                 │                      │
-└─────────────────┘                 └──────────-┬──────────┘
-                                                │
-                                                │ Prometheus format
-                                                │ (9464)
-                                                ▼
-                                        ┌─────────────────┐
-                                        │                 │
-                                        │   Prometheus    │
-                                        │ (localhost:9090)│
-                                        │                 │
-                                        └────────┬────────┘
-                                                 │
-                                                 │ Query API
-                                                 ▼
-                                        ┌─────────────────┐
-                                        │                 │
-                                        │    Grafana      │
-                                        │ (localhost:3000)│
-                                        │                 │
-                                        └─────────────────┘
+![Flow](./otel-lab/scr1.png)
+![Flow](./otel-lab/scr2.png)
 
 
 ---

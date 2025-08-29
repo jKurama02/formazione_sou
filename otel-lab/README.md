@@ -6,12 +6,11 @@ A minimal, production-inspired example for monitoring a Flask application using 
 
 ## 📈 Data Flow Overview
 
-```mermaid
-graph TD;
-    A[Flask App ("app.py")] -->|OTLP gRPC| B[OpenTelemetry Collector];
-    B -->|Prometheus format (9464)| C[Prometheus];
-    C -->|Data source| D[Grafana];
-```
+1. **Flask App** generates metrics and traces using OpenTelemetry.
+2. Metrics and traces are sent to the **OpenTelemetry Collector** via OTLP/gRPC.
+3. The Collector exposes metrics in Prometheus format on port **9464**.
+4. **Prometheus** scrapes metrics from the Collector.
+5. **Grafana** visualizes the data collected by Prometheus in interactive dashboards.
 
 ---
 

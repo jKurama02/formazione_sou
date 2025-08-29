@@ -53,7 +53,7 @@ A minimal, production-inspired example for monitoring a Flask application using 
 ---
 
 ## 🤹 Test
-    ```sh
+   ```sh
    ./verify.sh
    ```
 

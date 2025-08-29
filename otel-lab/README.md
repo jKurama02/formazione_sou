@@ -8,9 +8,9 @@ A minimal, production-inspired example for monitoring a Flask application using 
 
 ```mermaid
 graph TD;
-    A[Flask App (app.py)] -- OTLP/gRPC --> B[OpenTelemetry Collector];
-    B -- Prometheus format (port 9464) --> C[Prometheus];
-    C -- Data source --> D[Grafana];
+    A[Flask App (app.py)] -->|OTLP gRPC| B[OpenTelemetry Collector];
+    B -->|Prometheus format (9464)| C[Prometheus];
+    C -->|Data source| D[Grafana];
 ```
 
 ---

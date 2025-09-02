@@ -18,8 +18,16 @@
           CentOS SSH: ssh -i dockerfiles/id_key_genericuser -p 2222 genericuser@127.0.0.1
           Rocky9 SSH: ssh -i dockerfiles/id_key_genericuser -p 2223 genericuser@127.0.0.1
 
+## Vault : 
+# ENCRYPT
+# echo "goccia" > .vault_pass && for file in dockerfiles/*; do ansible-vault encrypt "$file" --vault-password-file .vault_pass; done
+# DECRYPT
+# for file in dockerfiles/*; do ansible-vault decrypt "$file" --vault-password-file .vault_pass; done
+
+
 
 ##   ansible-playbook start.yaml -v
+##   ansible-playbook playbook.yaml --vault-password-file password_file.txt
 
 # memo : Basic structure of role directorues:
 

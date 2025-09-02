@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Build CentOS SSH Docker image
+      community.docker.docker_image:
+        name: centos-ssh-img
+        build:
+          path: "./dockerfiles"
+          dockerfile: Dockerfile.centos
+        source: build
+        state: present
+    
+    - name: Display connection info
+      debug:
+        msg: "Container built successfully! To run: docker run -d -p 2222:22 --name centos-ssh centos-ssh-img"
+    
+    - name: Display SSH connection info  
+      debug:
+        msg: "To connect via SSH: ssh -i dockerfiles/id_key_genericuser -p 2222 genericuser@localhost"

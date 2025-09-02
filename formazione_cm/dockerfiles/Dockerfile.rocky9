@@ -1,0 +1,18 @@
+FROM rockylinux/rockylinux:9-minimal
+RUN microdnf install -y openssh-server sudo shadow-utils && microdnf clean all
+    #shadow-utils useful for useradd
+RUN useradd -m -s /bin/bash genericuser && echo 'genericuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+# Create genricuser with home directory and add to sudoers
+RUN ssh-keygen -A && \
+    sed -i 's/#PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    echo 'AllowUsers genericuser' >> /etc/ssh/sshd_config
+RUN mkdir -p /home/genericuser/.ssh && chmod 700 /home/genericuser/.ssh
+COPY id_key_genericuser.pub /home/genericuser/.ssh/authorized_keys
+RUN chown -R genericuser:genericuser /home/genericuser/.ssh && chmod 600 /home/genericuser/.ssh/authorized_keys
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
+
+# docker build -f Dockerfile.rocky9 -t rocky9-ssh .
+# docker run -d -p 2222:22 --name rocky9-ssh rocky9-ssh-img

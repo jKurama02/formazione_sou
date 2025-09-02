@@ -1,6 +1,8 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/rocky9"  
   config.vm.box_version = "4.3.12"
+  config.vm.network "forwarded_port", guest: 2222, host: 22
+  config.vm.network "forwarded_port", guest: 2223, host: 22
   config.vm.provision "ansible" do |ansible|
   ansible.playbook = "container-playbook.yaml"
 end

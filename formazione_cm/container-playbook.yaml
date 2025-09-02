@@ -4,12 +4,32 @@
   become: yes
 
   tasks:
-    - name: Assicura che pip sia installato
+    - name: Create dockerfiles directory
+      file:
+        path: /home/vagrant/dockerfiles
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: '0755'
+
+    - name: Generate SSH key pair for container access on VM
+      openssh_keypair:
+        path: /home/vagrant/dockerfiles/id_key_genericuser
+        type: rsa
+        size: 4096
+        comment: "SSH key for Rocky9 and Alpine container access"
+        force: yes
+        owner: vagrant
+        group: vagrant
+      become: no
+      become_user: vagrant
+
+    - name: Assicure python3-pip is installed
       dnf:
         name: python3-pip
         state: present
 
-    - name: Installa librerie Python richieste per Ansible Docker
+    - name: Install required python packages
       pip:
         name:
           - requests
@@ -27,11 +47,32 @@
          - docker-ce-cli
          - containerd.io
        state: present
+    - name: Lounch Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+    
+    - name: Add vagrant user to docker group 
+      user:
+        name: vagrant
+        groups: docker
+        append: yes
+    
+    - name: Reset SSH connection to allow user group changes
+      meta: reset_connection
+
+    - name: Create directory for registry data
+      file:
+        path: /registry
+        state: directory
     - name: Create registry container
       community.docker.docker_container:
         name: registry
         image: registry:2
         state: started
+        volumes:
+          - registry-data:/var/lib/registry
         ports:
           - "5000:5000"
-        
+    

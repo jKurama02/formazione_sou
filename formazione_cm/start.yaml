@@ -1,0 +1,39 @@
+---
+- name: Complete Container Pipeline
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  
+  roles:
+    - registry_setup      # 1. Setup registry
+    - container_builder   # 2. Build + Push  
+    - container_runner    # 3. Run containers
+
+  post_tasks:
+    - name: Pipeline completato con successo
+      debug:
+        msg: |
+          PIPELINE complete! 
+          Registry: http://localhost:5000
+          CentOS SSH: ssh -i dockerfiles/id_key_genericuser -p 2222 genericuser@127.0.0.1
+          Rocky9 SSH: ssh -i dockerfiles/id_key_genericuser -p 2223 genericuser@127.0.0.1
+
+
+##   ansible-playbook start.yaml -v
+
+# memo : Basic structure of role directorues:
+
+# name_role/
+# ├── defaults/          # vars with LOW priority
+# │   └── main.yaml
+# ├── vars/             # Vars with HIGH priority
+# │   └── main.yaml
+# ├── tasks/            # List of tasks to execute
+# │   └── main.yaml
+# ├── handlers/         # Tasks triggered by notify
+# │   └── main.yaml
+# ├── files/            # Static files to copy
+# ├── templates/        # Jinja2 templates
+# ├── meta/             # Metadata and dependencies
+# │   └── main.yaml
+# └── README.md         # Documentation

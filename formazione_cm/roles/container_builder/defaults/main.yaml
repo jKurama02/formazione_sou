@@ -1,0 +1,15 @@
+---
+# Docker registry URL
+registry_url: localhost:5000
+
+# Path where Dockerfiles are located
+dockerfile_path: ./dockerfiles
+
+# Images to build
+container_images:
+  - name: centos-ssh-img
+    dockerfile: Dockerfile.centos
+    registry_tag: centos-ssh
+  - name: rocky9-ssh-img
+    dockerfile: Dockerfile.rocky9
+    registry_tag: rocky9-ssh

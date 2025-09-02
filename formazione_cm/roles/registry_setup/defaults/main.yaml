@@ -1,0 +1,4 @@
+---
+### registry port and name for local docker registry ###
+registry_port: 5000
+registry_name: local-registry

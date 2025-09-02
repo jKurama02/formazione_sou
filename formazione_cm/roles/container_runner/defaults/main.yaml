@@ -1,0 +1,14 @@
+---
+registry_url: localhost:5000
+
+## run container in different port
+containers_to_run:
+  - name: centos-ssh-running
+    image: centos-ssh
+    ssh_port: 2222
+  - name: rocky9-ssh-running
+    image: rocky9-ssh
+    ssh_port: 2223
+
+# Path ssh Key  
+ssh_key_path: dockerfiles/id_key_genericuser

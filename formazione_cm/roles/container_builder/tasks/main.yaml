@@ -1,0 +1,34 @@
+---
+- name: Build Docker images
+  community.docker.docker_image:
+    name: "{{ item.name }}"
+    build:
+      path: "{{ dockerfile_path }}"
+      dockerfile: "{{ item.dockerfile }}"
+    source: build
+    state: present
+  loop: "{{ container_images }}"
+  register: build_results
+
+- name: Tag images for registry
+  community.docker.docker_image:
+    name: "{{ item.name }}"
+    repository: "{{ registry_url }}/{{ item.registry_tag }}"
+    tag: latest
+    source: local
+  loop: "{{ container_images }}"
+
+- name: Push images to registry  
+  community.docker.docker_image:
+    name: "{{ registry_url }}/{{ item.registry_tag }}"
+    tag: latest
+    push: yes
+    source: local
+    validate_certs: false
+    tls: false
+  loop: "{{ container_images }}" ## for each element of container_images
+
+- name: Display build summary
+  debug:
+    msg: "Immagine {{ item.registry_tag }} disponibile su {{ registry_url }}"
+  loop: "{{ container_images }}"

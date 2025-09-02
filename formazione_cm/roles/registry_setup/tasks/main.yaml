@@ -1,0 +1,27 @@
+---
+- name: Check if Docker is available
+  command: docker info
+  register: docker_check              # memorize return code and compare with 0
+  failed_when: docker_check.rc != 0
+  changed_when: false
+
+- name: Create registry container
+  community.docker.docker_container:
+    name: "{{ registry_name }}"
+    image: registry:2
+    state: started
+    volumes:
+      - registry-data:/var/lib/registry
+    ports:
+      - "{{ registry_port }}:5000"
+    restart_policy: always
+
+# - name: Wait for registry to be ready
+#   wait_for:
+#     port: "{{ registry_port }}"
+#     host: localhost
+#     timeout: 80
+
+- name: Display registry info
+  debug:
+    msg: "Registry active att http://localhost:{{ registry_port }}"

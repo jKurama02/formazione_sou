@@ -1,0 +1,25 @@
+---
+- name: Run containers from registry
+  community.docker.docker_container:
+    name: "{{ item.name }}"
+    image: "{{ registry_url }}/{{ item.image }}:latest"
+    state: started
+    ports:
+      - "{{ item.ssh_port }}:22"
+    restart_policy: always
+    pull: yes  # force pull from registry
+  loop: "{{ containers_to_run }}"
+
+- name: Wait for SSH services
+  wait_for:
+    port: "{{ item.ssh_port }}"
+    host: 127.0.0.1
+    timeout: 30
+  loop: "{{ containers_to_run }}"
+
+- name: Display SSH connection commands
+  debug:
+    msg: |
+      Container {{ item.name }} attivo!
+      SSH: ssh -i {{ ssh_key_path }} -p {{ item.ssh_port }} genericuser@127.0.0.1
+  loop: "{{ containers_to_run }}"

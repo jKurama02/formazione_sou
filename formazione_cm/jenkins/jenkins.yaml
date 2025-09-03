@@ -1,0 +1,37 @@
+---
+- name: Step 5 - Deploy Jenkins DinD Agent
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Run local Docker Registry
+      community.docker.docker_container:
+        name: docker_registry
+        image: registry:2
+        state: started
+        ports:
+          - "5000:5000"
+        volumes:
+          - registry_data:/var/lib/registry
+
+    - name: Build Jenkins Agent Image
+      community.docker.docker_image:
+        name: jenkins_dind_agent
+        tag: latest
+        source: build
+        build:
+          path: ../dockerfiles
+          dockerfile: Dockerfile.jenkins_agent
+        force_source: yes
+        state: present
+
+    - name: Run Jenkins Agent Container
+      community.docker.docker_container:
+        name: jenkins_dind_agent
+        image: jenkins_dind_agent:latest
+        pull: false  # Dont pull from Hub (we built it locally)
+        state: started
+        privileged: yes # in documentation it is required for DinD
+        ports:
+          - "2224:22"
+        env:
+          DOCKER_OPTS: "--insecure-registry=localhost:5000"

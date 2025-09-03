@@ -1,4 +1,5 @@
 ---
+
 - name: Build Docker images
   community.docker.docker_image:
     name: "{{ item.name }}"
@@ -8,17 +9,30 @@
     source: build
     state: present
   loop: "{{ container_images }}"
-  register: build_results
+  when: container_runtime == 'docker'
 
-- name: Tag images for registry
+- name: Build Podman images
+  containers.podman.podman_image:
+    name: "{{ registry_url }}/{{ item.registry_tag }}:latest"
+    path: "{{ dockerfile_path }}"
+    build:
+      file: "{{ item.dockerfile }}"
+    state: present
+  loop: "{{ container_images }}"
+  when: container_runtime == 'podman'
+
+- name: Tag Docker images for registry
   community.docker.docker_image:
     name: "{{ item.name }}"
     repository: "{{ registry_url }}/{{ item.registry_tag }}"
     tag: latest
     source: local
   loop: "{{ container_images }}"
+  when: container_runtime == 'docker'
 
-- name: Push images to registry  
+# Note: Podman doesn't need separate tagging - images are built with full name
+
+- name: Push Docker images to registry
   community.docker.docker_image:
     name: "{{ registry_url }}/{{ item.registry_tag }}"
     tag: latest
@@ -26,9 +40,20 @@
     source: local
     validate_certs: false
     tls: false
-  loop: "{{ container_images }}" ## for each element of container_images
+  loop: "{{ container_images }}"
+  when: container_runtime == 'docker'
+
+- name: Push Podman images to registry
+  containers.podman.podman_image:
+    name: "{{ registry_url }}/{{ item.registry_tag }}"
+    tag: latest
+    push: yes
+    validate_certs: false
+    tls_verify: false
+  loop: "{{ container_images }}"
+  when: container_runtime == 'podman'
 
 - name: Display build summary
   debug:
-    msg: "Immagine {{ item.registry_tag }} disponibile su {{ registry_url }}"
+    msg: "Immagine {{ item.registry_tag }} disponibile su {{ registry_url }} ({{ container_runtime }})"
   loop: "{{ container_images }}"

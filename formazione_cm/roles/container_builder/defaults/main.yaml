@@ -1,4 +1,6 @@
 ---
+container_runtime: "docker" # is default, but can be overridden with -e container_runtime=podman
+
 # Docker registry URL
 registry_url: localhost:5000
 

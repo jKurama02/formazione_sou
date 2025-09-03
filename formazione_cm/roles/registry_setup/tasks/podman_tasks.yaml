@@ -1,0 +1,17 @@
+---
+- name: Check if Podman is available
+  command: podman info
+  register: podman_check
+  failed_when: podman_check.rc != 0
+  changed_when: false
+
+- name: Create Podman registry container
+  containers.podman.podman_container:
+    name: "{{ registry_name }}"
+    image: registry:2
+    state: started
+    volumes:
+      - registry-data:/var/lib/registry
+    ports:
+      - "{{ registry_port }}:5000"
+    restart_policy: always

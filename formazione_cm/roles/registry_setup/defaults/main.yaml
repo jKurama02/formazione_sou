@@ -1,4 +1,5 @@
 ---
 ### registry port and name for local docker registry ###
+container_runtime: "docker" # is default, but can be overridden with -e container_runtime=podman
 registry_port: 5000
 registry_name: local-registry

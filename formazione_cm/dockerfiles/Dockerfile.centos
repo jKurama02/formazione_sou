@@ -13,9 +13,13 @@ RUN ssh-keygen -A && \
     sed -i 's/#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' /etc/ssh/sshd_config && \
     echo 'AllowUsers genericuser' >> /etc/ssh/sshd_config
 
+# sed -i process: Creates temporary file, reads original line-by-line 
+# applying pattern substitutions, then atomically replaces original file with modified temp file.
+
 RUN mkdir -p /home/genericuser/.ssh && chmod 700 /home/genericuser/.ssh
 COPY id_key_genericuser.pub /home/genericuser/.ssh/authorized_keys
-RUN chown -R genericuser:genericuser /home/genericuser/.ssh && chmod 600 /home/genericuser/.ssh/authorized_keys
+RUN chown -R genericuser:genericuser /home/genericuser/.ssh && chmod 600 /home/genericuser/.ssh/authorized_keys  
+# -R = recursive
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
 

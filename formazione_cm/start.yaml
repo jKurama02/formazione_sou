@@ -17,15 +17,14 @@
           Registry: http://localhost:5000
           CentOS SSH: ssh -i dockerfiles/id_key_genericuser -p 2222 genericuser@127.0.0.1
           Rocky9 SSH: ssh -i dockerfiles/id_key_genericuser -p 2223 genericuser@127.0.0.1
+          ## 127.0.0.1 is the loopback address, it always refers to the ===  localhost ===.
 
 ## Vault : 
 # ENCRYPT
 # echo "goccia" > .vault_pass && for file in dockerfiles/*; do ansible-vault encrypt "$file" --vault-password-file .vault_pass; done
 # DECRYPT
 # for file in dockerfiles/*; do ansible-vault decrypt "$file" --vault-password-file .vault_pass; done
-
-
-
+# RUN
 ##   ansible-playbook start.yaml -v
 ##   ansible-playbook playbook.yaml --vault-password-file password_file.txt
 
@@ -45,3 +44,6 @@
 # ├── meta/             # Metadata and dependencies
 # │   └── main.yaml
 # └── README.md         # Documentation
+
+
+# remember to pay attention of ssh directory and file permissions and ownership (700 for dir, 600 for private key, 644 for public key) a big rottura di balls

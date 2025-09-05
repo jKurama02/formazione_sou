@@ -1,9 +1,7 @@
 ---
-- name: $ Start the circus $
+- name: $ Starrt the circus $
   hosts: all  
   become: yes
-  vars:
-    jenkins_secret: "0B82455D63A54029911503747DA33B12"  #this is random pass-code only to able jenkins-agent correctly work line. 69
   tasks:
     - name: Add official docker repo
       command: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
@@ -57,22 +55,40 @@
         curl -LO https://get.helm.sh/helm-v3.14.4-linux-amd64.tar.gz
         tar -zxvf helm-v3.14.4-linux-amd64.tar.gz
         mv linux-amd64/helm /usr/local/bin/helm
+    - name: Check if namespace exists
+      shell: /usr/local/bin/kubectl get namespace formazione-sou
+      register: namespace_check
+      failed_when: false
+      changed_when: false
+
     - name: Create Service-account + role + bindrole
       become: yes
       shell: |
         /usr/local/bin/kubectl create namespace formazione-sou
-        /usr/local/bin/kubectl create serviceaccount cluster-reader
+        /usr/local/bin/kubectl create serviceaccount cluster-reader --namespace=formazione-sou
         /usr/local/bin/kubectl create role c-r --namespace=formazione-sou --verb=get --verb=watch --verb=list --resource=deployments
-        /usr/local/bin/kubectl create rolebinding bind-c-r --namespace=formazione-sou --role=c-r --serviceaccount=default:cluster-reader
+        /usr/local/bin/kubectl create rolebinding bind-c-r --namespace=formazione-sou --role=c-r --serviceaccount=formazione-sou:cluster-reader
+      when: namespace_check.rc != 0 # check if namespace exists
     - name: Copy export.sh
       ansible.builtin.copy:
         src: export.sh
         dest: /home/vagrant/
         mode: '0777'
+    - name: Copy agent_exec.sh  # BONUS TRACK
+      ansible.builtin.copy:
+        src: agent_exec.sh
+        dest: /home/vagrant/
+        mode: '0777'
+        
+    # - name: Copy jenkins-setup.yaml
+    #   ansible.builtin.copy:
+    #     src: jenkins-setup.yaml
+    #     dest: /home/vagrant/
+    #     mode: '0644'
     - name: Create docker-network
       docker_network:
-        name: circus_network
-        driver: bridge #default
+        name: circus_network             
+        driver: bridge #default                 
         ipam_config:
         - subnet: 192.168.50.0/24
     - name: Launch Jenkins-master
@@ -99,6 +115,7 @@
       shell: |
         sed -i 's|server: https://127.0.0.1:6443|server: https://10.0.2.15:6443|' /etc/rancher/k3s/k3s.yaml
         sed -i '/insecure-skip-tls-verify: true/d' /etc/rancher/k3s/k3s.yaml
+
     - name: Launch jenkins-agent
       community.docker.docker_container:
         name: jenkins-agent
@@ -106,10 +123,10 @@
         state: started 
         restart_policy: always
         env:
+          JENKINS_SECRET: "idkeyou"
           JENKINS_URL: "http://192.168.50.7:8080"
-          JENKINS_AGENT_NAME: "jenkins-agent"
-          JENKINS_AGENT_WORKDIR: "/home/jenkins"
-          JENKINS_SECRET: "{{ jenkins_secret }}"
+          JENKINS_AGENT_NAME: "Pino"
+          JENKINS_AGENT_WORKDIR: "/home/jenkins/agent"
           KUBECONFIG: "/home/jenkins/.kube/k3s.yaml"
         volumes:
           - jenkins_slave_home:/home/jenkins/agent
@@ -118,9 +135,8 @@
           - /usr/local/bin/kubectl:/usr/local/bin/kubectl
           - /etc/rancher/k3s/k3s.yaml:/home/jenkins/.kube/k3s.yaml
           - /usr/local/bin/helm:/usr/local/bin/helm
+          - /home/vagrant/agent_exec.sh:/home/jenkins/agent_exec.sh:ro
         networks:
           - name: circus_network  
             ipv4_address: 192.168.50.8
-    # - name: Create namespace formazione-sou
-    #   shell: "kubectl create namespace formazione-sou"
 

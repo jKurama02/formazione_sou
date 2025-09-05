@@ -1,0 +1,59 @@
+---
+# this is my try to create a jenkins agent via Ansible, but it doesn't work because jenkins-agent container cant install ansible
+# so I created a script (agent_exec.sh) that do the same operations of this playbook
+# and I mounted it as volume in jenkins-agent container
+
+
+- name: $ Setup Jenkins Agent $
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Get Jenkins crumb
+      uri:
+        url: http://192.168.50.7:8080/crumbIssuer/api/json
+        user: admin
+        password: admin
+        force_basic_auth: yes
+        return_content: yes
+      register: crumb_result
+
+    - name: Generate API token
+      uri:
+        url: http://192.168.50.7:8080/me/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken
+        method: POST
+        user: admin
+        password: admin
+        force_basic_auth: yes
+        headers:
+          Jenkins-Crumb: "{{ crumb_result.json.crumb }}"
+        body: newTokenName=myToken
+        return_content: yes
+      register: token_result
+
+    - name: Create Jenkins agent
+      uri:
+        url: http://192.168.50.7:8080/computer/doCreateItem?name=Pino&type=hudson.slaves.DumbSlave
+        method: POST
+        user: admin
+        password: "{{ token_result.json.data.tokenValue }}"
+        force_basic_auth: yes
+        headers:
+          Jenkins-Crumb: "{{ crumb_result.json.crumb }}"
+          Content-Type: application/x-www-form-urlencoded
+        body: 'json={"name": "Pino", "nodeDescription": "", "numExecutors": "1", "remoteFS": "/home/jenkins/agent", "labelString": "", "mode": "EXCLUSIVE"}'
+
+    - name: Get agent secret and run
+      uri:
+        url: http://192.168.50.7:8080/computer/Pino/slave-agent.jnlp
+        user: admin
+        password: "{{ token_result.json.data.tokenValue }}"
+        force_basic_auth: yes
+        return_content: yes
+      register: jnlp_result
+
+    - name: Download and run agent
+      shell: |
+        cd /tmp
+        curl -sO http://192.168.50.7:8080/jnlpJars/agent.jar
+        SECRET=$(echo '{{ jnlp_result.content }}' | grep -o '<argument>[a-f0-9]\{64\}</argument>' | sed 's/<[^>]*>//g')
+        nohup java -jar agent.jar -url http://192.168.50.7:8080/ -secret $SECRET -name Pino -webSocket -workDir "/home/jenkins/agent" > /dev/null 2>&1 &

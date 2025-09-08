@@ -6,7 +6,7 @@
   
   tasks:
     - name: Run Rocky9 SSH container
-      shell: docker run -d --name rocky9-ssh-container -p 2223:22 172.18.0.2:5000/rocky9-ssh:latest
+      shell: sudo docker run -d --name rocky9-ssh-container -p 2223:22 172.18.0.2:5000/rocky9-ssh:latest
 
 # i opted to use shell module instead of community.docker.docker_container
 # because I had issues with the python docker library dependency 

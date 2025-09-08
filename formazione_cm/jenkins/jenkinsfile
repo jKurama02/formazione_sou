@@ -19,7 +19,7 @@ pipeline {
                     ls -la
                     pwd
                     cd /home/jenkins/workspace/track_3/formazione_cm
-                    docker build -f dockerfiles/Dockerfile.rocky9 -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${REGISTRY}/${IMAGE_NAME}:latest .
+                    sudo docker build -f dockerfiles/Dockerfile.rocky9 -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${REGISTRY}/${IMAGE_NAME}:latest .
                     
                     # Push sia del tag specifico che di latest
                     sudo docker push ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}

@@ -9,7 +9,9 @@ pipeline {
         stage('Build & Deploy Rocky9') {
             steps {
                 sh '''
-                    cd /track_3
+                    ls -la
+                    pwd
+                    cd /track_3/
                     docker build -f dockerfiles/Dockerfile.rocky9 -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${REGISTRY}/${IMAGE_NAME}:latest .
                     
                     # Push sia del tag specifico che di latest

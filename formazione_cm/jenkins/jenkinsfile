@@ -24,6 +24,7 @@ pipeline {
                     # Push sia del tag specifico che di latest
                     sudo docker push ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}
                     sudo docker push ${REGISTRY}/${IMAGE_NAME}:latest
+                    ansible-playbook jenkins/jenkins.yaml
 
                     echo "*** image built with tags: ${BUILD_NUMBER}, latest ***"
                 '''

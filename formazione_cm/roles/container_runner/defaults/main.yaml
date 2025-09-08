@@ -11,4 +11,4 @@ containers_to_run:
     ssh_port: 2223
 
 # Path ssh Key  
-ssh_key_path: dockerfiles/id_key_genericuser
+ssh_key_path: credentials/id_key_genericuser

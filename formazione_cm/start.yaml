@@ -5,7 +5,7 @@
   gather_facts: false
   
   vars:
-    container_runtime: "docker"  # default, può essere sovrascritto con -e container_runtime=podman
+    container_runtime: "docker"  # default, can be overridden with -e container_runtime=podman
     
   roles:
     - registry_setup      # 1. Setup registry
@@ -18,15 +18,15 @@
         msg: |
           PIPELINE complete! 
           Registry: http://localhost:5000
-          CentOS SSH: ssh -i dockerfiles/id_key_genericuser -p 2222 genericuser@127.0.0.1
-          Rocky9 SSH: ssh -i dockerfiles/id_key_genericuser -p 2223 genericuser@127.0.0.1
+          CentOS SSH: ssh -i credentials/id_key_genericuser -p 2222 genericuser@127.0.0.1
+          Rocky9 SSH: ssh -i credentials/id_key_genericuser -p 2223 genericuser@127.0.0.1
           ## 127.0.0.1 is the loopback address, it always refers to the ===  localhost ===.
 
 ## Vault : 
 # ENCRYPT
-# echo "goccia" > .vault_pass && for file in dockerfiles/*; do ansible-vault encrypt "$file" --vault-password-file .vault_pass; done
+# echo "goccia" > .vault_pass && for file in credentials/*; do ansible-vault encrypt "$file" --vault-password-file .vault_pass; done
 # DECRYPT
-# for file in dockerfiles/*; do ansible-vault decrypt "$file" --vault-password-file .vault_pass; done
+# for file in credentials/*; do ansible-vault decrypt "$file" --vault-password-file .vault_pass; done
 # RUN
 ##   ansible-playbook start.yaml -v -e "container_runtime=podman" --vault-password-file .vault_pass
 ##   ansible-playbook playbook.yaml --vault-password-file .vault_pass
@@ -50,3 +50,9 @@
 
 
 # remember to pay attention of ssh directory and file permissions and ownership (700 for dir, 600 for private key, 644 for public key) a big rottura di balls
+
+
+
+
+# ansible-vault encrypt credentials/secrets.yml --vault-password-file .vault_pass
+# ansible-vault decrypt credentials/secrets.yml --vault-password-file .vault_pass

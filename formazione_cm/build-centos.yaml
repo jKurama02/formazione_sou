@@ -18,4 +18,4 @@
     
     - name: Display SSH connection info  
       debug:
-        msg: "To connect via SSH: ssh -i dockerfiles/id_key_genericuser -p 2222 genericuser@localhost"
+        msg: "To connect via SSH: ssh -i credentials/id_key_genericuser -p 2222 genericuser@localhost"

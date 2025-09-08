@@ -6,6 +6,11 @@ pipeline {
         // BUILD_NUMBER = "2" is automatic of Jenkins
     }
     stages {
+        stage('Cloning repository GitHub') {
+            steps {
+                git branch: 'main', url: 'https://github.com/jKurama02/formazione_sou.git'
+            }
+        }
         stage('Build & Deploy Rocky9') {
             steps {
                 sh '''

@@ -18,7 +18,7 @@ pipeline {
                 sh '''
                     ls -la
                     pwd
-                    cd /track_3/
+                    cd /home/jenkins/workspace/track_3/formazione_cm
                     docker build -f dockerfiles/Dockerfile.rocky9 -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${REGISTRY}/${IMAGE_NAME}:latest .
                     
                     # Push sia del tag specifico che di latest
@@ -27,6 +27,11 @@ pipeline {
 
                     echo "*** image built with tags: ${BUILD_NUMBER}, latest ***"
                 '''
+            }
+        }
+        stage('Clean Workspace') {
+            steps {
+                cleanWs() 
             }
         }
     }

@@ -1,0 +1,24 @@
+pipeline {
+    agent jenkins-agent_1
+    environment {
+        REGISTRY = "172.18.0.2:5000"
+        IMAGE_NAME = "rocky9-ssh"
+        // BUILD_NUMBER = "2" is automatic of Jenkins
+    }
+    stages {
+        stage('Build & Deploy Rocky9') {
+            steps {
+                sh '''
+                    cd /track_3
+                    docker build -f dockerfiles/Dockerfile.rocky9 -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${REGISTRY}/${IMAGE_NAME}:latest .
+                    
+                    # Push sia del tag specifico che di latest
+                    docker push ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}
+                    docker push ${REGISTRY}/${IMAGE_NAME}:latest
+
+                    echo "*** image built with tags: ${BUILD_NUMBER}, latest ***"
+                '''
+            }
+        }
+    }
+}

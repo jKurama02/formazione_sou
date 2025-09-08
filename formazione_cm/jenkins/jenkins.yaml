@@ -3,6 +3,13 @@
   hosts: localhost
   connection: local
   tasks:
+    - name: Create Docker network
+      community.docker.docker_network:
+        name: docker_registry
+        ipam_config:
+          - subnet: 172.18.0.0/16
+            gateway: 172.18.0.1
+
     - name: Run local Docker Registry
       community.docker.docker_container:
         name: docker_registry
@@ -12,6 +19,9 @@
           - "5000:5000"
         volumes:
           - registry_data:/var/lib/registry
+        networks:
+          - name: docker_registry
+            ipv4_address: 172.18.0.2
 
     - name: Build Jenkins Agent Image
       community.docker.docker_image:
@@ -35,3 +45,5 @@
           - "2224:22"
         env:
           DOCKER_OPTS: "--insecure-registry=localhost:5000"
+        networks:
+          - name: docker_registry

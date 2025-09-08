@@ -1,6 +1,6 @@
 FROM docker:dind
 
-RUN apk add --no-cache openssh-server sudo ansible && \
+RUN apk add --no-cache openssh-server sudo ansible curl openjdk17-jre && \
     adduser -D -s /bin/ash jenkins && \
     echo 'jenkins ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers && \
     echo 'jenkins:jenkins' | chpasswd
@@ -15,6 +15,7 @@ RUN ssh-keygen -A && \
 RUN mkdir -p /home/jenkins/.ssh && chmod 700 /home/jenkins/.ssh
 COPY id_key_genericuser.pub /home/jenkins/.ssh/authorized_keys
 RUN chown -R jenkins:jenkins /home/jenkins/.ssh && chmod 600 /home/jenkins/.ssh/authorized_keys
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

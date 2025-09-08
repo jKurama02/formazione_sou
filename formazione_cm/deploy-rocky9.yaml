@@ -1,0 +1,19 @@
+---
+- name: Deploy Rocky9 Container
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  
+  tasks:
+    - name: Run Rocky9 SSH container
+      community.docker.docker_container:
+        name: rocky9-ssh-container
+        image: "172.18.0.2:5000/rocky9-ssh:latest"
+        state: started
+        ports:
+          - "2223:22"
+        restart_policy: unless-stopped
+        
+    - name: Display container status
+      debug:
+        msg: "Rocky9 container deployed! SSH: ssh -i dockerfiles/id_key_genericuser -p 2223 genericuser@localhost"

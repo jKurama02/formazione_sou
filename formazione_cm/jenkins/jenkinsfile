@@ -1,5 +1,7 @@
 pipeline {
-    agent jenkins-agent_1
+    agent {
+        label 'jenkins-agent_1'
+    }
     environment {
         REGISTRY = "172.18.0.2:5000"
         IMAGE_NAME = "rocky9-ssh"

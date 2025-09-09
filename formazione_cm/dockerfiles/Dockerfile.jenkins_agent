@@ -1,19 +1,22 @@
 FROM docker:dind
 
+ARG JENKINS_PASS   
+# i create arg to pass the jenkins password during build time
+
 RUN apk add --no-cache openssh-server sudo ansible curl openjdk17-jre && \
     adduser -D -s /bin/ash jenkins && \
     echo 'jenkins ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers && \
-    echo 'jenkins:jenskins' | chpasswd
+    echo "jenkins:${JENKINS_PASS}" | chpasswd
 
 RUN ssh-keygen -A && \
     sed -i 's/#PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config && \
     sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
-    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication no/' /etc/ssh/sshd_config && \
     sed -i 's/#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' /etc/ssh/sshd_config && \
     echo 'AllowUsers jenkins' >> /etc/ssh/sshd_config
 
 RUN mkdir -p /home/jenkins/.ssh && chmod 700 /home/jenkins/.ssh
-COPY credentials/id_key_genericuser.pub /home/jenkins/.ssh/authorized_keys
+COPY id_key_genericuser.pub /home/jenkins/.ssh/authorized_keys
 RUN chown -R jenkins:jenkins /home/jenkins/.ssh && chmod 600 /home/jenkins/.ssh/authorized_keys
 RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
 

@@ -2,6 +2,8 @@
 - name: Step 5 - Deploy Jenkins DinD Agent
   hosts: localhost
   connection: local
+  vars_files:
+    - ../dockerfiles/env.yaml   #    ..    means go back one directory, then into dockerfiles
   tasks:
     - name: Create Docker network
       community.docker.docker_network:
@@ -31,6 +33,8 @@
         build:
           path: ../dockerfiles
           dockerfile: Dockerfile.jenkins_agent
+          args:
+            JENKINS_PASS: "{{ JENKINS_PASS }}"
         force_source: yes
         state: present
 

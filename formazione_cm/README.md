@@ -109,3 +109,30 @@ ssh -i dockerfiles/id_key_genericuser -p 2224 jenkins@localhost      # Jenkins
 curl http://localhost:5000/v2/_catalog                    # External
 curl http://172.18.0.2:5000/v2/_catalog                   # Internal network
 ```
+
+## Jenkins Master Configuration
+
+**Important**: The Jenkins master must be configured to run on the `docker_registry` network to properly communicate with the Jenkins agent and internal registry.
+
+### Required Jenkins Master Setup
+```bash
+docker run -d \
+  --name jenkins-master \
+  --network docker_registry \
+  --ip 172.18.0.5 \
+  -p 8080:8080 \
+  -p 50001:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  jenkins/jenkins:lts
+```
+
+**Why this configuration is mandatory:**
+- The Jenkins agent container runs on the `docker_registry` network (172.18.0.0/16)
+- Internal registry is accessible at `172.18.0.2:5000` only from within this network
+- Jenkins master needs to communicate with the agent on the same network segment
+- Without this network configuration, Jenkins master cannot reach the agent or internal registry
+
+**Network topology:**
+- Jenkins Master: `172.18.0.5:8080` (web UI accessible via localhost:8080)
+- Internal Registry: `172.18.0.2:5000`
+- Jenkins Agent: `172.18.0.3:2224` (SSH access)

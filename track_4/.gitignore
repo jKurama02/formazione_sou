@@ -1,0 +1,10 @@
+nginx-ssl/
+
+*.pem
+*.key
+*.crt
+*.csr
+
+
+.DS_Store
+

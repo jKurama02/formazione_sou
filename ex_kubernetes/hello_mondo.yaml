@@ -1,4 +1,4 @@
-# ====== FIRST DEPLOYMENT: Hello World ======
+# Deployment per Hello World
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,7 +22,7 @@ spec:
         args: ["-c", "echo '<h1>Hello World</h1>' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
 
 ---
-# ====== SECOND DEPLOYMENT: Ciao Mondo ======
+# Deployment per Ciao Mondo
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -46,7 +46,7 @@ spec:
         args: ["-c", "echo '<h1>Ciao Mondo</h1>' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
 
 ---
-# ====== FIRST SERVICE: Hello World ======
+# Service per Hello World
 apiVersion: v1
 kind: Service
 metadata:
@@ -55,11 +55,11 @@ spec:
   selector:
     app: hello-world
   ports:
-  - port: 80  #service
-    targetPort: 80 #pod
+  - port: 80
+    targetPort: 80
 
 ---
-# ====== SECOND SERVICE: Ciao Mondo ======
+# Service per Ciao Mondo
 apiVersion: v1
 kind: Service
 metadata:
@@ -72,40 +72,33 @@ spec:
     targetPort: 80
 
 ---
-# ====== INGRESS: Traffic Routing ======
+# Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: language-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /   # Rewrite-target applicato: /ita → /
-    nginx.ingress.kubernetes.io/use-regex: "true"   # with this, the "$" in paths is interpreted as "end of string"
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  ingressClassName: nginx
   rules:
   - http:
       paths:
-      - path: /eng$
-        pathType: ImplementationSpecific
+      - path: /eng
+        pathType: Exact
         backend:
           service:
             name: hello-world-service
             port:
               number: 80
-      - path: /ita$
-        pathType: ImplementationSpecific
+      - path: /ita
+        pathType: Exact
         backend:
           service:
             name: ciao-mondo-service
             port:
               number: 80
 
-# ====== KEY CONFIGURATION TO PREVENT /ita/ MATCHING ======
-# The crucial part is the combination of:
-# 1. "nginx.ingress.kubernetes.io/use-regex: true" & "nginx.ingress.kubernetes.io/rewrite-target: /" for regex support
-# 2. Path "/ita$" where $ means exact end of string (no /ita/something)
-# 3. pathType: ImplementationSpecific to use controller-specific regex matching
-# Setup: Install nginx ingress controller with: helm install ingress-nginx ingress-nginx/ingress-nginx
-# Test: curl localhost/ita (works) vs curl localhost/ita/ (404 as expected)
-# if you wanna use your browser, forward the ingress controller service port to localhost:8080 with:
-# kubectl port-forward svc/ingress-nginx-controller 8080:80
+
+
+        

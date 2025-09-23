@@ -61,7 +61,7 @@ spec:
 
 ---
 apiVersion: v1
-kind: ResourceQuota
+kind: ResourceQuota  #limit resource in kubernetes
 metadata:
   name: nginx-resource-quota      
   namespace: default #where is located the deployment nginx-deployment

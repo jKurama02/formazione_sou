@@ -14,6 +14,18 @@ Questo progetto è stato realizzato come esercitazione pratica sul deployment in
 - Rilascio dei certificati richiesti dal CSR tramite la ROOT CA generata, con firma e verifica dei certificati.
 - I certificati (`nginx-cert.pem`), chiavi (`nginx-key.pem`) e CSR sono gestiti nella cartella `nginx-ssl/`.
 - Configurazione di Nginx per l'utilizzo dei certificati SSL generati, tramite il file `nginx-ssl.conf`.
+- **Gestione della configurazione SSL tramite ConfigMap:**
+    - Per utilizzare il file di configurazione `nginx-ssl.conf` all'interno del container, è necessario creare una ConfigMap che lo includa. Questo si fa con il comando:
+      ```sh
+      kubectl create configmap nginx-ssl-config --from-file=nginx-ssl.conf
+      ```
+    - Nel manifest (`nginx.yaml`), il volume `nginx-config` monta la ConfigMap nella directory `/etc/nginx/conf.d` del container Nginx.
+    - In questo modo, Nginx carica automaticamente la configurazione SSL dal file fornito tramite ConfigMap.
+    - Se il file di configurazione viene modificato, è sufficiente aggiornare la ConfigMap con:
+      ```sh
+      kubectl create configmap nginx-ssl-config --from-file=nginx-ssl.conf
+      ```
+    - Questo approccio garantisce che la configurazione sia sempre aggiornata e gestita in modo centralizzato tramite Kubernetes.
 
 ## 3. Gestione Resource Quotas
 - Studio approfondito del manifest che descrive una ResourceQuota, con spiegazione dei campi principali (`spec.hard`).

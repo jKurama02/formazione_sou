@@ -24,7 +24,7 @@ spec:
         - name: ssl-keys
           mountPath: /etc/ssl/private
           readOnly: true
-        - name: nginx-config
+        - name: nginx-config    #this is new volume mount for config map
           mountPath: /etc/nginx/conf.d
           readOnly: true
       volumes:
@@ -44,6 +44,7 @@ spec:
       - name: nginx-config
         configMap:
           name: nginx-ssl-config
+          
 
 ---
 apiVersion: v1

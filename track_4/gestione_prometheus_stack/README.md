@@ -74,4 +74,63 @@ Questo permette al cluster di scaricare l'immagine dal registry pubblico.
 
 ---
 
+## Collegamento tra ServiceMonitor e Prometheus Stack: parti cruciali e funzionamento
+
+Perché il ServiceMonitor `flask-app` venga correttamente rilevato e monitorato dallo stack Prometheus, sono fondamentali alcuni elementi di configurazione:
+
+### 1. Label di selezione
+- Il ServiceMonitor deve avere una label (es. `release: prometheus`) che corrisponde al selector configurato nello stack Prometheus (di solito nel `values.yaml` di kube-prometheus-stack).
+- Esempio:
+  ```yaml
+  metadata:
+    labels:
+      release: prometheus
+  ```
+- Questo permette al Prometheus Operator di "vedere" il ServiceMonitor e aggiungerlo alla configurazione di scraping.
+
+### 2. Selector del ServiceMonitor
+- Il campo `spec.selector.matchLabels` deve corrispondere alle label del Service che espone la Flask app.
+- Esempio:
+  ```yaml
+  spec:
+    selector:
+      matchLabels:
+        app: flask-app
+  ```
+- Così il ServiceMonitor seleziona il Service giusto da monitorare.
+
+### 3. Nome della porta
+- Nel Service, la porta deve avere un nome (es. `metrics`) che viene usato dal ServiceMonitor:
+  ```yaml
+  ports:
+  - port: 321
+    name: metrics
+  ```
+- Nel ServiceMonitor:
+  ```yaml
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 10s
+  ```
+- Questo collega l'endpoint `/metrics` esposto dalla Flask app alla configurazione di Prometheus.
+
+### 4. Namespace
+- Il ServiceMonitor deve essere nel namespace dove Prometheus Operator lo cerca (di solito lo stesso del Prometheus o quello configurato nel values.yaml).
+
+---
+
+### Come funziona il collegamento
+1. Il Prometheus Operator installato con kube-prometheus-stack osserva tutte le risorse ServiceMonitor nel cluster.
+2. Filtra i ServiceMonitor che hanno la label `release: prometheus` (o quella configurata).
+3. Per ogni ServiceMonitor, cerca i Service con le label corrispondenti e la porta nominata `metrics`.
+4. Genera la configurazione di scraping per Prometheus, che inizia a raccogliere le metriche dall'endpoint `/metrics` esposto dalla Flask app.
+5. Le metriche sono disponibili in Prometheus e visualizzabili in Grafana.
+
+**In sintesi:**
+- Label, selector e nome porta sono le chiavi per il collegamento automatico tra ServiceMonitor e Prometheus.
+- Il Prometheus Operator gestisce tutto in modo dinamico, senza bisogno di configurare manualmente Prometheus.
+
+---
+
 Questo processo garantisce che il deployment e il monitoring funzionino su qualsiasi cluster Kubernetes, locale o remoto.

@@ -133,4 +133,77 @@ Perché il ServiceMonitor `flask-app` venga correttamente rilevato e monitorato 
 
 ---
 
-Questo processo garantisce che il deployment e il monitoring funzionino su qualsiasi cluster Kubernetes, locale o remoto.
+## 3. Monitoraggio esterno con Blackbox Exporter
+
+Blackbox Exporter permette di monitorare servizi esterni (es. siti web, API) tramite probe HTTP, HTTPS, DNS, TCP, ICMP. Nel progetto viene usato per verificare la raggiungibilità e lo stato di servizi come Google.
+
+### Cos'è Blackbox Exporter
+- È un componente di Prometheus che effettua probe su endpoint esterni, simulando richieste HTTP/HTTPS e altri protocolli.
+- Ritorna metriche sullo stato (successo/fallimento, tempo di risposta, ecc.) che Prometheus raccoglie e Grafana può visualizzare.
+
+### Configurazione nel progetto
+- Il file `blackbox.yaml` definisce i moduli di probe, ad esempio:
+  ```yaml
+  modules:
+    http_2xx:
+      prober: http
+      timeout: 5s
+      http:
+        valid_status_codes: [200, 301, 302]
+        method: GET
+        fail_if_not_ssl: true
+        fail_if_ssl: false
+  ```
+- Nel file `config.yaml` è presente una risorsa `Probe` che usa Blackbox Exporter per monitorare Google:
+  ```yaml
+  apiVersion: monitoring.coreos.com/v1
+  kind: Probe
+  metadata:
+    name: google-blackbox
+    namespace: monitoring
+    labels:
+      release: prometheus
+  spec:
+    jobName: google-blackbox
+    interval: 30s
+    module: http_2xx
+    prober:
+      url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+      scheme: http
+    targets:
+      staticConfig:
+        static:
+          - https://www.google.com
+  ```
+- La label `release: prometheus` permette al Prometheus Operator di rilevare la risorsa Probe.
+
+### Come funziona il flusso
+1. Prometheus Operator rileva la risorsa Probe grazie alla label.
+2. La Probe invia richieste HTTP/HTTPS a Google (o altri target definiti).
+3. Blackbox Exporter valuta la risposta (status code, SSL, ecc.) secondo le regole del modulo.
+4. Le metriche generate sono raccolte da Prometheus e visualizzabili in Grafana.
+
+### Come testare Blackbox Exporter
+1. **Verifica la configurazione:**
+   - Controlla che `blackbox.yaml` sia corretto e che il modulo usato nella Probe (`http_2xx`) sia presente.
+   - Assicurati che la Probe in `config.yaml` punti al servizio corretto di Blackbox Exporter.
+2. **Applica la configurazione su Kubernetes:**
+   ```sh
+   kubectl apply -f config.yaml
+   ```
+3. **Controlla lo stato della Probe:**
+   ```sh
+   kubectl get probes -n monitoring
+   kubectl describe probe google-blackbox -n monitoring
+   ```
+4. **Verifica le metriche in Prometheus/Grafana:**
+   - Accedi a Grafana (vedi istruzioni sopra) e cerca dashboard o query relative a `probe_success`, `probe_duration_seconds`, ecc.
+   - Puoi anche interrogare Prometheus direttamente:
+     - Query esempio: `probe_success{job="google-blackbox"}`
+
+### Note pratiche
+- Puoi aggiungere altri target nella sezione `static` della Probe per monitorare più servizi.
+- Modifica i moduli in `blackbox.yaml` per personalizzare le regole di probe (timeout, status code, SSL, ecc.).
+- Blackbox Exporter è utile per monitorare endpoint esterni, API pubbliche, servizi di terze parti, e per testare la disponibilità da diversi cluster.
+
+---

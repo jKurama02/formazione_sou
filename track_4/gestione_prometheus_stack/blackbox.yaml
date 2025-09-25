@@ -1,0 +1,9 @@
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      valid_status_codes: [200, 301, 302]
+      method: GET
+      fail_if_not_ssl: true   # fail if not HTTPS
+      fail_if_ssl: false

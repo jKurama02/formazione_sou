@@ -48,3 +48,27 @@ spec:
   - port: metrics
     path: /metrics
     interval: 10s
+
+
+
+###  black-box configuration - prober for monitoring external services like google
+
+
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: google-blackbox
+  namespace: monitoring
+  labels:
+    release: prometheus   # important for prometheus to discover the probe
+spec:
+  jobName: google-blackbox
+  interval: 30s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+    scheme: http
+  targets:
+    staticConfig:
+      static:
+        - https://www.google.com

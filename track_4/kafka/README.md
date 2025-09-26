@@ -179,27 +179,72 @@ Per ripartire dall'inizio:
 docker exec -it <kafka_container_name> kafka-consumer-groups --bootstrap-server localhost:9092 --reset-offsets --to-earliest --group my-group --topic foobar --execute
 ```
 
-## 📁 Struttura File
+## 📈 Monitoraggio Lag tra Consumer e Producer
 
-```
-kafka/
-├── README.md              # Questa documentazione
-├── producer.py            # Applicazione producer
-├── consumer.py            # Applicazione consumer
-├── kafka_broker.yaml      # Configurazione Docker Compose
-└── k_venv/               # Ambiente virtuale Python
-    ├── bin/
-    ├── lib/
-    └── ...
+### Comando di Descrizione del Consumer Group
+
+Per monitorare lo stato del tuo consumer group, puoi usare il seguente comando:
+
+```bash
+docker exec -it <kafka_container_name> kafka-consumer-groups --bootstrap-server localhost:9092 --group my-group --describe
 ```
 
-## 🎓 Concetti Kafka Utilizzati
+### Cosa fa questo comando
 
-- **Topic**: Canale di comunicazione denominato ("foobar")
-- **Producer**: Applicazione che invia messaggi
-- **Consumer**: Applicazione che riceve messaggi
-- **Consumer Group**: Gruppo di consumer che condividono il carico
-- **Offset**: Posizione di lettura nei messaggi del topic
-- **Serialization**: Conversione oggetti Python → JSON → bytes
-- **Deserialization**: Conversione bytes → JSON → oggetti Python
+Questo comando fornisce informazioni dettagliate sul consumer group "my-group", mostrando:
+
+- **TOPIC**: Il nome del topic (foobar)
+- **PARTITION**: Numero della partizione del topic
+- **CURRENT-OFFSET**: L'offset dell'ultimo messaggio processato dal consumer
+- **LOG-END-OFFSET**: L'offset dell'ultimo messaggio disponibile nel topic
+- **LAG**: Numero di messaggi non ancora processati dal consumer
+- **CONSUMER-ID**: Identificativo del consumer attivo
+- **HOST**: Host dove è in esecuzione il consumer
+- **CLIENT-ID**: ID del client consumer
+
+### Esempio di Output
+
+```
+GROUP           TOPIC   PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG  CONSUMER-ID                     HOST         CLIENT-ID
+my-group        foobar  0          10              10              0    consumer-1-abc123def456         /172.17.0.1  consumer-1
+```
+
+### Cos'è il LAG?
+
+Il **LAG** (ritardo) è un indicatore fondamentale che rappresenta:
+
+- **Definizione**: Numero di messaggi che il consumer non ha ancora processato
+- **Calcolo**: `LAG = LOG-END-OFFSET - CURRENT-OFFSET`
+- **Interpretazione**:
+  - **LAG = 0**: Il consumer è aggiornato, ha processato tutti i messaggi disponibili
+  - **LAG > 0**: Ci sono messaggi in attesa di essere processati
+  - **LAG crescente**: Il consumer non riesce a tenere il passo con la produzione di messaggi
+
+### Esempi Pratici di LAG
+
+1. **Consumer aggiornato** (ideale):
+   ```
+   CURRENT-OFFSET: 15, LOG-END-OFFSET: 15, LAG: 0
+   ```
+   Il consumer ha processato tutti i 15 messaggi disponibili.
+
+2. **Consumer in ritardo**:
+   ```
+   CURRENT-OFFSET: 12, LOG-END-OFFSET: 18, LAG: 6
+   ```
+   Ci sono 6 messaggi in attesa di essere processati.
+
+3. **Consumer fermo** (problema):
+   ```
+   CURRENT-OFFSET: 5, LOG-END-OFFSET: 25, LAG: 20
+   ```
+   Il consumer non sta processando messaggi, accumulando ritardo.
+
+### Utilizzo per il Debugging
+
+Usa questo comando per:
+- **Verificare** se il consumer sta processando messaggi
+- **Identificare** problemi di performance (LAG elevato)
+- **Monitorare** l'utilizzo delle partizioni
+- **Controllare** che i consumer siano attivi
 

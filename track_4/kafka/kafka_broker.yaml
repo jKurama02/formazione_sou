@@ -22,4 +22,4 @@ services:
 
 
 
-      ## ----->     docker compose -f kafka_broker.yaml up -d     <-----`
+      ## ----->     docker compose -f kafka_broker.yaml up -d     <-----``
